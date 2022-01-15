@@ -1,5 +1,5 @@
 import numpy as np
-
+import sys
 
 class ReLU:
 
@@ -25,7 +25,10 @@ class Softmax:
         self.inputs = inputs
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
-        self.output = probabilities
+        if len(probabilities.shape) > 2:
+            self.output = np.max(probabilities, axis=1)
+        else:
+            self.output = probabilities
 
 
     def backward(self, dvalues):
@@ -37,5 +40,4 @@ class Softmax:
 
 
     def predictions(self, outputs):
-        # return np.argmax(outputs, axis=1)
-        return outputs
+        return np.argmax(outputs, axis=1)
