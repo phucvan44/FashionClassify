@@ -1,22 +1,30 @@
+import sys
+
 import numpy as np
 import pickle
 import copy
-from .layers import Input, Dense
+from .layers import Input, Dense, Conv2D
 from .activation import Softmax, ReLU
 
 class Model:
 
     def __init__(self):
         self.layers = []
+        self.trainable_layers = []
+        self.input_layer = Input()
 
 
     def add(self, layer):
-        if isinstance(layer, Dense):
-            self.layers.append(layer)
-            if layer.activation != None:
-                self.layers.append(layer.activation)
+        if len(self.layers) == 0:
+            layer.setup(None)
+            layer.prev = self.input_layer
         else:
-            self.layers.append(layer)
+            self.layers[-1].next = layer
+            layer.setup(self.layers[-1].output_shape)
+            layer.prev = self.layers[-1]
+        if hasattr(layer, 'weights') and not isinstance(layer, Conv2D):
+            self.trainable_layers.append(layer)
+        self.layers.append(layer)
 
 
     def compile(self, loss, optimizer, accuracy):
@@ -27,23 +35,8 @@ class Model:
         if accuracy != None:
             self.accuracy = accuracy
 
-        self.input_layer = Input()
-        layer_count = len(self.layers)
-        self.trainable_layers = []
-        for i in range(layer_count):
-            if i == 0:
-                self.layers[i].prev = self.input_layer
-                self.layers[i].next = self.layers[i + 1]
-            elif i < layer_count - 1:
-                self.layers[i].prev = self.layers[i - 1]
-                self.layers[i].next = self.layers[i + 1]
-            else:
-                self.layers[i].prev = self.layers[i - 1]
-                self.layers[i].next = self.loss
-                self.output_layer_activation = self.layers[i]
-
-            if hasattr(self.layers[i], 'weights'):
-                self.trainable_layers.append(self.layers[i])
+        self.layers[-1].next = self.loss
+        self.output_layer_activation = self.layers[-1].activation
         self.loss.remember_trainable_layers(self.trainable_layers)
 
 
@@ -84,6 +77,7 @@ class Model:
                 predictions = self.output_layer_activation.predictions(output)
                 if isinstance(self.layers[-1], Softmax):
                     predictions = np.argmax(predictions, axis=1)
+
                 accuracy = self.accuracy.calculate(predictions,batch_y)
 
                 self.backward(output, batch_y)
@@ -97,6 +91,10 @@ class Model:
 
             epoch_loss = self.loss.calculate_accumulated()
             epoch_accuracy = self.accuracy.calculate_accumulated()
+
+
+    def evalue(self, X, y, batch_size=32):
+        pass
 
 
     def predict(self, X, batch_size=None):
@@ -128,6 +126,38 @@ class Model:
         self.loss.backward(output, y)
         for layer in reversed(self.layers):
             layer.backward(layer.next.dinputs)
+
+
+    def summary(self):
+        print("_" * 100)
+        print("{:<15} {:<15} {:<20} {:<20} {:<15} {:<15}".format("Type", "Name", "Input Shape", "Output Shape",
+                                                                 "Activation", "Param #"))
+        print("=" * 100)
+        trainable_param = 0
+        for idx, layer in enumerate(self.layers):
+            _type = str(type(layer).__name__)
+            _name = str(layer.name)
+            _ip_shape = str(layer.input_shape)
+            if idx == 0:
+                _ip_shape = str(tuple([None] + list(layer.input_shape)))
+            _op_shape = str(layer.output_shape)
+            _activation = str(type(layer.activation).__name__)
+            if _activation == "NoneType":
+                _activation = "None"
+            _param = 0
+            if hasattr(layer, 'weights'):
+                _param += np.prod(layer.weights.shape)
+            if hasattr(layer, 'biases'):
+                _param += np.prod(layer.biases.shape)
+            # print(layer.input_shape,layer.output_shape)
+            trainable_param += _param
+            _param = str(_param)
+            print("{:<15} {:<15} {:<20} {:<20} {:<15} {:<15}\n".format(_type, _name, _ip_shape, _op_shape, _activation, _param))
+        print("=" * 100)
+        print("Total params: {:,}".format(trainable_param))
+        print("Trainable params: {:,}".format(trainable_param))
+        print("Non-trainable params: 0")
+        print("_" * 100)
 
 
     def save(self, path):

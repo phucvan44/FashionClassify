@@ -44,7 +44,6 @@ def main():
     fashion_mnist = tf.keras.datasets.fashion_mnist
 
     (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
-    _train_images, _test_images = [train_images.copy(), test_images.copy()]
     class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
                    'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
@@ -53,7 +52,7 @@ def main():
 
     model = Model.load("backup")
 
-    predictions = model.predict(test_images.reshape(test_images.shape[0], -1).astype(np.float32))
+    predictions = model.predict(test_images)
 
     num_rows = 5
     num_cols = 3
@@ -61,7 +60,7 @@ def main():
     plt.figure(figsize=(2 * 2 * num_cols, 2 * num_rows))
     for i in range(num_images):
       plt.subplot(num_rows, 2 * num_cols, 2 * i + 1)
-      plot_image(i, predictions[i], test_labels, _test_images, class_names)
+      plot_image(i, predictions[i], test_labels, test_images, class_names)
       plt.subplot(num_rows, 2 * num_cols, 2 * i + 2)
       plot_value_array(i, predictions[i], test_labels)
     plt.tight_layout()

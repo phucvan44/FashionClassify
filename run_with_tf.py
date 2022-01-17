@@ -17,11 +17,13 @@ train_images = train_images / 255.0
 test_images = test_images / 255.0
 
 model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(28, 28, 1), activation=tf.nn.relu),
+    tf.keras.layers.MaxPooling2D(pool_size=(3, 3)),
     tf.keras.layers.Flatten(input_shape=(28, 28)),
     tf.keras.layers.Dense(128, activation='relu'),
     tf.keras.layers.Dense(10)
 ])
-
+model.summary()
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])

@@ -37,5 +37,4 @@ class Softmax:
 
 
     def predictions(self, outputs):
-        # return np.argmax(outputs, axis=1)
-        return outputs
+        return np.argmax(outputs, axis=1)
