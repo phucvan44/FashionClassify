@@ -169,11 +169,12 @@ class Conv2D:
         dw_col = dout@X_col.T
         dX = self.backward_col(dX_col, X.shape, self.kernel_size, self.stride, self.padding)
         self.dweights = dw_col.reshape((dw_col.shape[0], self.input_shape[-3], self.kernel_size, self.kernel_size))
+        self.dinputs = dX
 
 
 class MaxPooling2D:
 
-    def __init__(self, pool_size, stride=None, padding=0, name=None, input_shape=None, **kwargs):
+    def __init__(self, pool_size, stride=1, padding=0, name=None, input_shape=None, **kwargs):
         self.pool_size = pool_size
         self.stride = stride
         self.padding = padding
@@ -181,8 +182,6 @@ class MaxPooling2D:
         self.input_shape = input_shape
         self.name = name
         self.activation = None
-        if self.stride == None:
-            self.stride = self.pool_size
 
 
     def setup(self, input_shape):

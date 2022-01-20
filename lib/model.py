@@ -93,7 +93,7 @@ class Model:
             epoch_accuracy = self.accuracy.calculate_accumulated()
 
 
-    def evalue(self, X, y, batch_size=32):
+    def evaluate(self, X, y, batch_size=32):
         pass
 
 

@@ -21,13 +21,13 @@ def main():
     test_images = test_images / 255.0
 
     model = Model()
-    #
     model.add(Conv2D(filters=32, kernel_size=3, input_shape=(1, 28, 28), name="conv layer 1", activation=ReLU()))
-    model.add(MaxPooling2D(pool_size=3, name="maxpool layer 1"))
+    model.add(MaxPooling2D(pool_size=3, stride=3, name="maxpool layer 1"))
+    model.add(Conv2D(filters=32, kernel_size=3, name="conv layer 2", activation=ReLU()))
+    model.add(MaxPooling2D(pool_size=2, stride=2, name="maxpool layer 2"))
     model.add(Flatten())
     model.add(Dense(units = 128, name="Layer 1", activation=ReLU()))
     model.add(Dense(units=10, name="Layer 2", activation=Softmax()))
-    #
     model.compile(
         loss=CategoricalCrossentropy(),
         optimizer=Adam(decay=1e-3),
@@ -35,7 +35,6 @@ def main():
     )
     model.summary()
     model.fit(train_images, train_labels, epochs=5, batch_size=32)
-    # #
     model.save("backup")
 
 if __name__ == "__main__":
